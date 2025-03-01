@@ -94,7 +94,6 @@ class BlaBackground extends StatelessWidget {
   const BlaBackground({super.key});
 
   @override
-
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
