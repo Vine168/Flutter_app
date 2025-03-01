@@ -1,43 +1,46 @@
 ///
-/// Enumeration of supported countries.
+/// Enumation of available BlaBlaCar countries
 ///
 enum Country {
   france('France'),
   uk('United Kingdom'),
   spain('Spain');
 
-  final String displayName;
+  final String name;
 
-  const Country(this.displayName);
+  const Country(this.name);
 }
 
 ///
-/// Represents a geographical location.
+/// This model describes a location (city, street).
 ///
 class Location {
-  final String cityName;
+  final String name;
   final Country country;
 
-  const Location({required this.cityName, required this.country});
-  Location.copy(Location other)
-      : cityName = other.cityName,
-        country = other.country;
+  const Location({required this.name, required this.country});
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Location && other.cityName == cityName && other.country == country;
+    return other is Location && other.name == name && other.country == country;
   }
+
   @override
-  int get hashCode => cityName.hashCode ^ country.hashCode;
+  int get hashCode => name.hashCode ^ country.hashCode;
+
   @override
-  String toString() => cityName;
+  String toString() {
+    return name;
+  }
 }
+
 ///
-/// Represents a street within a location.
+/// This model describes a street.
 ///
 class Street {
-  final String streetName;
-  final Location location;
-  const Street({required this.streetName, required this.location});
+  final String name;
+  final Location city;
+
+  const Street({required this.name, required this.city});
 }
