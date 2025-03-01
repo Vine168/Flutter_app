@@ -1,76 +1,64 @@
 import 'package:flutter/material.dart';
-import '/theme/theme.dart';
+import '../../theme/theme.dart';
 
-/// A reusable button widget that handles primary and secondary button styles.
+enum ButtonType { primary, secondary }
 class BlaButton extends StatelessWidget {
-  final String label; // Text displayed on the button.
-  final VoidCallback onPressed; // Callback function when the button is pressed.
-  final bool
-      isPrimary; // Determines whether the button is primary or secondary.
+  final String text;
+  final VoidCallback? onPressed;
+  final ButtonType type;
   final IconData? icon;
+  final EdgeInsetsGeometry padding;
+  final double borderRadius;
+  final double iconSize;
 
   const BlaButton({
     super.key,
-    required this.label,
+    required this.text,
     required this.onPressed,
-    this.isPrimary = true,
+    this.type = ButtonType.primary,
     this.icon,
+    this.padding = const EdgeInsets.symmetric(vertical: 20),
+    this.borderRadius = 8.0,
+    this.iconSize = 20.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor =
-        isPrimary ? BlaColors.primary : BlaColors.backgroundAccent;
-    final Color textColor = isPrimary ? BlaColors.white : BlaColors.textNormal;
+    // Compute the rendering
+    Color backgroundColor = type == ButtonType.primary ? BlaColors.primary : BlaColors.white;
+    BorderSide border = type == ButtonType.primary
+        ? BorderSide.none
+        : BorderSide(color: BlaColors.greyLight, width: 2);
+    Color textColor = type == ButtonType.primary ? BlaColors.white : BlaColors.primary;
+    Color iconColor = type == ButtonType.primary ? BlaColors.white : BlaColors.primary;
 
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: textColor,
-        padding: const EdgeInsets.symmetric(
-          horizontal: BlaSpacings.xl,
-          vertical: BlaSpacings.l,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BlaSpacings.radius),
-        ),
-      ),
-      icon: icon != null
-          ? Icon(icon, color: BlaColors.iconLight)
-          : const SizedBox.shrink(),
-      label: Text(label, style: BlaTextStyles.button),
-      onPressed: onPressed,
-    );
-  }
-}
+    // Create the button icon - if any
+    List<Widget> children = [];
+    if (icon != null) {
+      children.add(Icon(icon, size: iconSize, color: iconColor));
+      children.add(SizedBox(width: BlaSpacings.s));
+    }
 
-class BlaButtonTestScreen extends StatelessWidget {
-  const BlaButtonTestScreen({super.key});
+    // Create the button text
+    Text buttonText = Text(text, style: BlaTextStyles.button.copyWith(color: textColor));
+    children.add(buttonText);
 
-  void _onButtonPressed(String type) {
-    print('$type button pressed');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          BlaButton(
-            label: 'Contact Volodia',
-            onPressed: () => _onButtonPressed('Contact Volodia'),
-            isPrimary: false,
-            icon: Icons.chat,
+    // Render the button
+    return SizedBox(
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          padding: padding,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
-          const SizedBox(height: BlaSpacings.m),
-          BlaButton(
-            label: 'Request to Book',
-            onPressed: () => _onButtonPressed('Request to Book'),
-            isPrimary: true,
-            icon: Icons.calendar_today,
-          ),
-        ],
+          side: border,
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: children,
+        ),
       ),
     );
   }
