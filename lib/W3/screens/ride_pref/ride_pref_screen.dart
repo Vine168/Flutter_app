@@ -4,6 +4,8 @@ import '../../model/ride_pref/ride_pref.dart';
 import '../../service/ride_prefs_service.dart';
 import '../../theme/theme.dart';
  
+import '../../utils/animations_util.dart';
+import '../rides/rides_screen.dart';
 import 'widgets/ride_pref_form.dart';
 import 'widgets/ride_pref_history_tile.dart';
 
@@ -27,7 +29,10 @@ class _RidePrefScreenState extends State<RidePrefScreen> {
   onRidePrefSelected(RidePref ridePref) {
  
    // 1 - Navigate to the rides screen (with a buttom to top animation) 
-    
+    Navigator.of(context)
+        .push(AnimationUtils.createBottomToTopRoute(RidesScreen(
+      initialRidePref: ridePref,
+    )));
   }
 
   @override
