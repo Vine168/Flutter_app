@@ -91,6 +91,7 @@ class LocationTile extends StatelessWidget {
 }
 /// Combines the search input and the navigation back button.
 /// A clear button appears when the search contains some text.
+/// change structure
 
 class BlaSearchBar extends StatefulWidget {
   final Function(String text) onSearchChanged;
