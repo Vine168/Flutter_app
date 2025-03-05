@@ -112,6 +112,17 @@ class MockRidesRepository extends RidesRepository {
         pricePerSeat: 9.0,
         acceptPets: false,
       ),
+      Ride(
+        departureLocation:
+        Location(name: "Battambang", country: Country.cambodia),
+        arrivalLocation: Location(name: "Phnom Penh", country: Country.cambodia),
+        departureDate: DateTime.now().add(Duration(hours: 5)),
+        arrivalDateTime: DateTime.now().add(Duration(hours: 8)),
+        driver: sovanda,
+        availableSeats: 1,
+        pricePerSeat: 9.0,
+        acceptPets: false,
+      ),
     ];
 
     // Filter the rides based on the preferences and filters
