@@ -18,9 +18,8 @@ class BlaLocationPicker extends StatefulWidget {
 class _BlaLocationPickerState extends State<BlaLocationPicker> {
   List<Location> filteredLocations = [];
 
-  // ----------------------------------
   // Initialize the Form attributes
-  // ----------------------------------
+
 
   @override
   void initState() {
