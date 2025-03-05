@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../repository/mock/mock_location_repository.dart';
+import '../../screens/rides/rides_screen.dart';
+import '../../service/locations_service.dart';
 
 import '../../model/ride_pref/ride_pref.dart';
 import '../../service/ride_prefs_service.dart';
 import '../../theme/theme.dart';
- 
+
 import '../../utils/animations_util.dart';
-import '../rides/rides_screen.dart';
 import 'widgets/ride_pref_form.dart';
 import 'widgets/ride_pref_history_tile.dart';
 
@@ -24,19 +26,33 @@ class RidePrefScreen extends StatefulWidget {
 }
 
 class _RidePrefScreenState extends State<RidePrefScreen> {
+  final LocationsRepository = MockLocationsRepository();
+  late final LocationsService locationsService;
 
-  
-  onRidePrefSelected(RidePref ridePref) {
+  onRidePrefSelected(RidePref newPreference) async {
+
+    // 1 - Update the current preference
+    RidePrefService.instance.setCurrentPreference(newPreference);
  
-   // 1 - Navigate to the rides screen (with a buttom to top animation) 
-    Navigator.of(context)
-        .push(AnimationUtils.createBottomToTopRoute(RidesScreen(
-      initialRidePref: ridePref,
-    )));
+    // 2 - Navigate to the rides screen (with a buttom to top animation)
+    await Navigator.of(context).push(AnimationUtils.createBottomToTopRoute(RidesScreen()));
+  
+    // 3 - After wait  - Update the state   -- TODO MAKE IT WITH STATE MANAGEMENT
+    setState(() { });
   }
 
   @override
+    void initState() {
+      super.initState();
+      locationsService = LocationsService.instance;
+    }
+
+  @override
   Widget build(BuildContext context) {
+
+    RidePref? currentRidePreference = RidePrefService.instance.currentPreference;
+    List<RidePref> pastPreferences = RidePrefService.instance.getPastPreferences();
+
     return Stack(
       children: [
         // 1 - Background  Image
@@ -45,7 +61,7 @@ class _RidePrefScreenState extends State<RidePrefScreen> {
         // 2 - Foreground content
         Column(
           children: [
-            SizedBox(height: 16),
+            SizedBox(height: BlaSpacings.m),
             Text(
               "Your pick of rides at low price",
               style: BlaTextStyles.heading.copyWith(color: Colors.white),
@@ -61,16 +77,9 @@ class _RidePrefScreenState extends State<RidePrefScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-
-
-
                   // 2.1 Display the Form to input the ride preferences
-                  RidePrefForm(initRidePref: RidePrefService.currentRidePref,),
+                  RidePrefForm(initialPreference: currentRidePreference, onSubmit: onRidePrefSelected, initRidePref: null, locationsService: locationsService,),
                   SizedBox(height: BlaSpacings.m),
-
-
-
-
 
                   // 2.2 Optionally display a list of past preferences
                   SizedBox(
@@ -78,10 +87,11 @@ class _RidePrefScreenState extends State<RidePrefScreen> {
                     child: ListView.builder(
                       shrinkWrap: true, // Fix ListView height issue
                       physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: RidePrefService.ridePrefsHistory.length,
+                      itemCount: pastPreferences.length,
                       itemBuilder: (ctx, index) => RidePrefHistoryTile(
-                        ridePref: RidePrefService.ridePrefsHistory[index],
-                        onPressed: () => onRidePrefSelected(RidePrefService.ridePrefsHistory[index]),
+                        ridePref: pastPreferences[index],
+                        onPressed: () =>
+                            onRidePrefSelected(pastPreferences[index]),
                       ),
                     ),
                   ),
@@ -110,4 +120,3 @@ class BlaBackground extends StatelessWidget {
     );
   }
 }
- 

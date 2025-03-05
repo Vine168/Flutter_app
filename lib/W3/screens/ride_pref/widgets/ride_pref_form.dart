@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
- 
+import '../../../screens/ride_pref/widgets/data_select_screen.dart';
+import '../../../screens/ride_pref/widgets/ride_pref_input_tile.dart';
+import '../../../screens/ride_pref/widgets/seat_select_screen.dart';
+import '../../../service/locations_service.dart';
+import '../../../utils/date_time_util.dart';
+import '../../../widgets/inputs/bla_location_picker.dart';
+
 import '../../../model/ride/locations.dart';
 import '../../../model/ride_pref/ride_pref.dart';
+import '../../../widgets/display/bla_divider.dart';
+import '../../../widgets/actions/bla_button.dart';
+//import 'date_picker.dart';
 import '../../../theme/theme.dart';
 import '../../../utils/animations_util.dart';
-import '../../../utils/date_time_util.dart';
-import '../../../widgets/actions/bla_button.dart';
-import '../../../widgets/display/bla_divider.dart';
-import '../../../widgets/inputs/bla_location_picker.dart';
-import '../../rides/rides_screen.dart';
-import 'ride_pref_input_tile.dart';
- 
+//import 'seat_number_spinner.dart';
+
 ///
 /// A Ride Preference From is a view to select:
 ///   - A depcarture location
@@ -24,19 +28,38 @@ class RidePrefForm extends StatefulWidget {
   // The form can be created with an optional initial RidePref.
   final RidePref? initRidePref;
 
-  const RidePrefForm({super.key, this.initRidePref});
+  final LocationsService locationsService;
+
+  /// Callback triggered when form is submitted
+  final Function(RidePref ridePref) onSubmit;
+
+  const RidePrefForm({
+    super.key,
+    required this.initRidePref,
+    required this.locationsService,
+    required this.onSubmit,
+    RidePref? initialPreference,
+  });
 
   @override
   State<RidePrefForm> createState() => _RidePrefFormState();
 }
 
 class _RidePrefFormState extends State<RidePrefForm> {
+  // Select departure location
   Location? departure;
+
+  // Select departure time
   late DateTime departureDate;
+
+  // Select arrival location
   Location? arrival;
+
+  // Number of Passenger
   late int requestedSeats;
 
-
+  /// Valid Form when both locations and date are selected
+  // bool get _isFormFieldValid => departure != null && arrival != null;
 
   // ----------------------------------
   // Initialize the Form attributes
@@ -45,31 +68,27 @@ class _RidePrefFormState extends State<RidePrefForm> {
   @override
   void initState() {
     super.initState();
+    _initializeFormData();
+  }
 
-    if (widget.initRidePref != null) {
-      departure = widget.initRidePref!.departure;
-      arrival = widget.initRidePref!.arrival;
-      departureDate = widget.initRidePref!.departureDate;
-      requestedSeats = widget.initRidePref!.requestedSeats;
-    } else {
-      // If no given preferences, we select default ones :
-      departure = null; // User shall select the departure
-      departureDate = DateTime.now(); // Now  by default
-      arrival = null; // User shall select the arrival
-      requestedSeats = 1; // 1 seat book by default
-    }
+  // Initialize form fields from provided RidePref or defaults value
+  void _initializeFormData() {
+    final pref = widget.initRidePref;
+    departure = pref?.departure;
+    arrival = pref?.arrival;
+    departureDate = pref?.departureDate ?? DateTime.now();
+    requestedSeats = pref?.requestedSeats ?? 1;
   }
 
   // ----------------------------------
   // Handle events
   // ----------------------------------
- 
 
+  // Handle to open LocationSearchScreen with Bottom-to-Top transition
   void onDeparturePressed() async {
     // 1- Select a location
     Location? selectedLocation = await Navigator.of(context).push<Location>(
-        AnimationUtils.createBottomToTopRoute(BlaLocationPicker(initLocation: departure,))
-        );
+        AnimationUtils.createBottomToTopRoute(BlaLocationPicker()));
 
     // 2- Update the from if needed
     if (selectedLocation != null) {
@@ -79,10 +98,11 @@ class _RidePrefFormState extends State<RidePrefForm> {
     }
   }
 
+  // Handle to open LocationSearchScreen with Bottom-to-Top transition
   void onArrivalPressed() async {
     // 1- Select a location
     Location? selectedLocation = await Navigator.of(context).push<Location>(
-        AnimationUtils.createBottomToTopRoute(BlaLocationPicker(initLocation: arrival,)));
+        AnimationUtils.createBottomToTopRoute(BlaLocationPicker()));
 
     // 2- Update the from if needed
     if (selectedLocation != null) {
@@ -91,44 +111,73 @@ class _RidePrefFormState extends State<RidePrefForm> {
       });
     }
   }
-  
-  void onSubmit() {
-        bool hasDeparture = departure != null;
-    bool hasArrival = arrival != null;
 
-    if (hasDeparture && hasArrival) {
-      // 1- Crea a Ride Pref from user inputs
-      RidePref newRideRef = RidePref(
+  // Handle on Dtte Selection
+  void onDatePressed() async {
+    final result = await Navigator.of(context).push<DateTime>(
+      AnimationUtils.createBottomToTopRoute(
+          DateSelectionScreen(initialDate: departureDate)),
+    );
+
+    if (result != null) {
+      setState(() {
+        departureDate = result;
+      });
+    }
+  }
+
+  // Handle on Seat Selection
+  void onSeatsPressed() async {
+    final result = await Navigator.of(context).push<int>(
+      AnimationUtils.createBottomToTopRoute(
+          SeatSelectionScreen(initialSeats: requestedSeats)),
+    );
+
+    if (result != null) {
+      setState(() {
+        requestedSeats = result;
+      });
+    }
+  }
+
+  /// Creates and submits a RidePref object when form is valid
+  void onSubmit() {
+    // 1- Check input validity
+    bool hasDeparture = departure != null;
+    bool hasArrival = arrival != null;
+    bool isValid = hasDeparture && hasArrival;
+
+    if (isValid) {
+      // 2 - Create a  new preference
+      RidePref newPreference = RidePref(
           departure: departure!,
           departureDate: departureDate,
           arrival: arrival!,
           requestedSeats: requestedSeats);
 
-      // 2 - Navigate to the rides screen (with a buttom to top animation)
-      Navigator.of(context)
-          .push(AnimationUtils.createBottomToTopRoute(RidesScreen(
-        initialRidePref: newRideRef,
-      )));
+      // 3 - Callback with the new preference
+      widget.onSubmit(newPreference);
     }
   }
 
- 
+  // Switches departure and arrival locations when both already selected
   void onSwappingLocationPressed() {
     setState(() {
       // We switch only if both departure and arrivate are defined
-        if (departure != null && arrival != null) {
-          Location temp = departure!;
-          departure = Location.copy(arrival!);
-          arrival = Location.copy(temp);
-        }
-      });
+      if (departure != null && arrival != null) {
+        setState(() {
+          final temp = departure;
+          departure = arrival;
+          arrival = temp;
+        });
+      }
+    });
   }
-
 
   // ----------------------------------
   // Compute the widgets rendering
   // ----------------------------------
-    String get departureLabel =>
+  String get departureLabel =>
       departure != null ? departure!.name : "Leaving from";
   String get arrivalLabel => arrival != null ? arrival!.name : "Going to";
 
@@ -138,62 +187,76 @@ class _RidePrefFormState extends State<RidePrefForm> {
   String get dateLabel => DateTimeUtils.formatDateTime(departureDate);
   String get numberLabel => requestedSeats.toString();
 
-  bool get switchVisible => arrival!=null && departure != null;
-
+  bool get switchVisible => arrival != null && departure != null;
 
   // ----------------------------------
   // Build the widgets
   // ----------------------------------
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [ 
-          
+        children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: BlaSpacings.m),
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
             child: Column(
               children: [
-                // 1 - Input the ride departure
+                // Departure location field
                 RidePrefInputTile(
-                    isPlaceHolder: showDeparturePLaceHolder,
                     title: departureLabel,
-                    leftIcon: Icons.location_on,
                     onPressed: onDeparturePressed,
-                    rightIcon: switchVisible? Icons.swap_vert:null,
-                    onRightIconPressed: switchVisible? onSwappingLocationPressed: null,
-                    ),
+                    leftIcon: Icons.radio_button_checked_outlined,
+                    isPlaceHolder: showDeparturePLaceHolder,
+                    rightIcon: switchVisible ? Icons.swap_vert : null,
+                    onRightIconPressed:
+                        switchVisible ? onSwappingLocationPressed : null),
+                // Arrival location field
                 const BlaDivider(),
-
-                // 2 - Input the ride arrival
+                // Arrival location field
                 RidePrefInputTile(
-                    isPlaceHolder: showArrivalPLaceHolder,
-                    title: arrivalLabel,
-                    leftIcon: Icons.location_on,
-                    onPressed: onArrivalPressed),
+                  title: arrivalLabel,
+                  onPressed: onArrivalPressed,
+                  leftIcon: Icons.radio_button_checked_outlined,
+                  isPlaceHolder: showArrivalPLaceHolder,
+                ),
                 const BlaDivider(),
-
-                // 3 - Input the ride date
+                // Date selection field
                 RidePrefInputTile(
-                    title: dateLabel,
-                    leftIcon: Icons.calendar_month,
-                    onPressed: () => {}),
+                  title: dateLabel,
+                  onPressed: onDatePressed,
+                  leftIcon: Icons.calendar_month_outlined,
+                ),
                 const BlaDivider(),
-
-                // 4 - Input the requested number of seats
+                // Passenger count field
                 RidePrefInputTile(
-                    title: numberLabel,
-                    leftIcon: Icons.person_2_outlined,
-                    onPressed: () => {})
+                  title: numberLabel,
+                  onPressed: onSeatsPressed,
+                  leftIcon: Icons.person_outline,
+                ),
               ],
             ),
           ),
-
-          // 5 - Launch a search
-          BlaButton(text: 'Search', onPressed: onSubmit),
-       
- 
-        ]);
+          // Submit button
+          SizedBox(
+            width: double.infinity,
+            child: BlaButton(
+              label: 'Search',
+              onPressed: onSubmit,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(0),
+                  topRight: Radius.circular(0),
+                  bottomLeft: Radius.circular(BlaSpacings.radius),
+                  bottomRight: Radius.circular(BlaSpacings.radius),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

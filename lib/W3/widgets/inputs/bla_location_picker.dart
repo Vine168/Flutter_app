@@ -1,155 +1,215 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/W3/model/ride/locations.dart';
+import '../../model/ride/locations.dart';
 import '../../service/locations_service.dart';
 import '../../theme/theme.dart';
 
+///
 /// This full-screen modal is in charge of providing (if confirmed) a selected location.
+///
 class BlaLocationPicker extends StatefulWidget {
-  final Location? initLocation;
-  const BlaLocationPicker({super.key, this.initLocation});
+  // final LocationsService locationsService; // The picker can be triguer with an existing location name
+
+  // const BlaLocationPicker({super.key, required this.locationsService});
 
   @override
   State<BlaLocationPicker> createState() => _BlaLocationPickerState();
 }
+
 class _BlaLocationPickerState extends State<BlaLocationPicker> {
   List<Location> filteredLocations = [];
+
+  // ----------------------------------
+  // Initialize the Form attributes
+  // ----------------------------------
 
   @override
   void initState() {
     super.initState();
-    if (widget.initLocation != null) {
-      filteredLocations = _getLocationsFor(widget.initLocation!.name);
-    }
+
+    filteredLocations = LocationsService.instance.getLocations();
   }
-  void _onBackSelected() {
+
+  void onBackSelected() {
     Navigator.of(context).pop();
   }
 
-  void _onLocationSelected(Location location) {
+  void onLocationSelected(Location location) {
     Navigator.of(context).pop(location);
   }
 
-  void _onSearchChanged(String searchText) {
-    if (searchText.length > 1) {
-      setState(() {
-        filteredLocations = _getLocationsFor(searchText);
-      });
-    } else {
-      setState(() {
-        filteredLocations = [];
-      });
-    }
+  void onSearchChanged(String searchText) {
+    // List<Location> newSelection = [];
+
+    // if (searchText.length > 1) {
+    //   // We start to search from 2 characters only.
+    //   newSelection = getLocationsFor(searchText);
+    // }
+
+    setState(() {
+      filteredLocations = LocationsService.instance
+          .getLocations()
+          .where((location) =>
+              location.name.toUpperCase().startsWith(searchText.toUpperCase()))
+          .toList();
+      // Sort the filtered locations alphabetically by name
+      filteredLocations
+          .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    });
   }
-  List<Location> _getLocationsFor(String text) {
-    return LocationsService.availableLocations
-        .where((location) => location.name.toUpperCase().contains(text.toUpperCase()))
-        .toList();
-  }
+
+  // List<Location> getLocationsFor(String text) {
+  //   return LocationsService.availableLocations
+  //       .where((location) =>
+  //           location.name.toUpperCase().startsWith(text.toUpperCase()))
+  //       .toList();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: BlaSpacings.m, vertical: BlaSpacings.s),
-        child: Column(
-          children: [
-            // Top search bar
-            BlaSearchBar(
-              onBackPressed: _onBackSelected,
-              onSearchChanged: _onSearchChanged,
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredLocations.length,
-                itemBuilder: (ctx, index) => LocationTile(
-                  location: filteredLocations[index],
-                  onSelected: _onLocationSelected,
-                ),
+        body: Padding(
+      padding: const EdgeInsets.only(
+          left: BlaSpacings.m, right: BlaSpacings.m, top: BlaSpacings.s),
+      child: Column(
+        children: [
+          // Top search Search bar
+          BlaSearchBar(
+            onBackPressed: onBackSelected,
+            onSearchChanged: onSearchChanged,
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredLocations.length,
+              itemBuilder: (ctx, index) => LocationTile(
+                location: filteredLocations[index],
+                onSelected: onLocationSelected,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
-/// Represents an item in the list of locations.
+
+///
+/// This tile represents an item in the list of past entered ride inputs
+///s
 class LocationTile extends StatelessWidget {
   final Location location;
   final Function(Location location) onSelected;
 
-  const LocationTile({super.key, required this.location, required this.onSelected});
+  const LocationTile(
+      {super.key, required this.location, required this.onSelected});
+
+  String get title => location.name;
+
+  String get subTitle => location.country.name;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () => onSelected(location),
-      title: Text(location.name, style: BlaTextStyles.body.copyWith(color: BlaColors.textNormal)),
-      subtitle: Text(location.country.name, style: BlaTextStyles.label.copyWith(color: BlaColors.textLight)),
-      trailing: Icon(Icons.arrow_forward_ios, color: BlaColors.iconLight, size: 16),
+      title: Text(title,
+          style: BlaTextStyles.body.copyWith(color: BlaColors.textNormal)),
+      subtitle: Text(subTitle,
+          style: BlaTextStyles.label.copyWith(color: BlaColors.textLight)),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        color: BlaColors.iconLight,
+        size: 16,
+      ),
     );
   }
 }
-/// Combines the search input and the navigation back button.
-/// A clear button appears when the search contains some text.
-/// change structure
 
+///
+///  The Search bar combines the search input + the navigation back button
+///  A clear button appears when search contains some text.
+///
 class BlaSearchBar extends StatefulWidget {
+  const BlaSearchBar({
+    super.key,
+    required this.onSearchChanged,
+    required this.onBackPressed,
+  });
+
   final Function(String text) onSearchChanged;
   final VoidCallback onBackPressed;
 
-  const BlaSearchBar({super.key, required this.onSearchChanged, required this.onBackPressed});
   @override
   State<BlaSearchBar> createState() => _BlaSearchBarState();
 }
 
 class _BlaSearchBarState extends State<BlaSearchBar> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
-  bool get _searchIsNotEmpty => _controller.text.isNotEmpty;
+  bool get searchIsNotEmpty => _controller.text.isNotEmpty;
 
-  void _onChanged(String newText) {
+  void onChanged(String newText) {
+    // 1 - Notity the listener
     widget.onSearchChanged(newText);
+
+    // 2 - Update the cross icon
     setState(() {});
   }
+
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: BlaColors.backgroundAccent,
-        borderRadius: BorderRadius.circular(BlaSpacings.radius),
+        borderRadius:
+            BorderRadius.circular(BlaSpacings.radius), // Rounded corners
       ),
       child: Row(
         children: [
-          // Back button
-          IconButton(
-            onPressed: widget.onBackPressed,
-            icon: Icon(Icons.arrow_back_ios, color: BlaColors.iconLight, size: 16),
-          ),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              onChanged: _onChanged,
-              style: TextStyle(color: BlaColors.textLight),
-              decoration: InputDecoration(
-                hintText: "Any city, street...",
-                border: InputBorder.none,
+          // Left icon
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: IconButton(
+              onPressed: widget.onBackPressed,
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: BlaColors.iconLight,
+                size: 16,
               ),
             ),
           ),
-          _searchIsNotEmpty
+
+          Expanded(
+            child: TextField(
+              focusNode: _focusNode, // Keep focus
+              onChanged: onChanged,
+              controller: _controller,
+              style: TextStyle(color: BlaColors.textLight),
+              decoration: InputDecoration(
+                hintText: "Any City or Street",
+                border: InputBorder.none, // No border
+                filled: false, // No background fill
+              ),
+            ),
+          ),
+
+          searchIsNotEmpty // A clear button appears when search contains some text
               ? IconButton(
                   icon: Icon(Icons.close, color: BlaColors.iconLight),
                   onPressed: () {
                     _controller.clear();
-                    _onChanged("");
+                    _focusNode.requestFocus(); // Ensure it stays focused
+                    onChanged("");
                   },
                 )
-              : const SizedBox.shrink(),
+              : SizedBox.shrink(), // Hides the icon if text field is empty
         ],
       ),
     );

@@ -13,6 +13,8 @@ class BlaColors {
   
   static Color white              = Colors.white;
 
+  static var background;
+
   static Color get backGroundColor { 
     return BlaColors.primary;
   }

@@ -1,11 +1,13 @@
+
 import 'package:flutter/material.dart';
-import 'package:flutter_app/W3/widgets/actions/bla_icon_button.dart';
+import '../../../widgets/actions/bla_icon_button.dart';
 
 import '../../../theme/theme.dart';
 
 ///
 /// This tile represents a selectable tile on the Ride Preference screen
 ///
+
 class RidePrefInputTile extends StatelessWidget {
   final String title;
   final VoidCallback onPressed;
@@ -23,9 +25,9 @@ class RidePrefInputTile extends StatelessWidget {
       required this.title,
       required this.onPressed,
       required this.leftIcon,
-      this.rightIcon, //   optional
-      this.onRightIconPressed, //   optional
-      this.isPlaceHolder = false});
+      this.isPlaceHolder = false,
+      this.rightIcon,
+      this.onRightIconPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +36,14 @@ class RidePrefInputTile extends StatelessWidget {
 
     return ListTile(
       onTap: onPressed,
-      title: Text(title,
-          style: BlaTextStyles.button.copyWith(fontSize: 14, color: textColor)),
+      title: Text(
+        title,
+        style: BlaTextStyles.button.copyWith(fontSize: 14, color: textColor),
+      ),
       leading: Icon(
         leftIcon,
-        size: BlaSize.icon,
         color: BlaColors.iconLight,
+        size: BlaSize.icon,
       ),
       trailing: rightIcon != null
           ? BlaIconButton(icon: rightIcon, onPressed: onRightIconPressed)

@@ -1,7 +1,8 @@
-import 'locations.dart';
-// import '../../service/rides_service.dart';
-import '../../utils/date_time_util.dart';
-import '../user/user.dart';
+import '../../../model/ride/locations.dart';
+import '../../../model/user/user.dart';
+import '../../../service/rides_service.dart';
+import '../../../utils/date_time_util.dart';
+
 
 enum RideStatus {
   created,
@@ -21,19 +22,21 @@ class Ride {
   final User driver;
   final int availableSeats;
   final double pricePerSeat;
-  RideStatus status = RideStatus.created;
-  final List<User> passengers = [];
-  final bool acceptPets;
+  final RidesFilter acceptPets;
 
-  Ride( {
+  RideStatus status = RideStatus.created;
+
+  final List<User> passengers = [];
+
+  Ride({
     required this.departureLocation,
     required this.departureDate,
     required this.arrivalLocation,
     required this.arrivalDateTime,
     required this.driver,
     required this.availableSeats,
-    required this.pricePerSeat, 
-    required this.acceptPets,
+    required this.pricePerSeat,
+    required this.acceptPets
   });
 
   void addPassenger(User passenger) {
