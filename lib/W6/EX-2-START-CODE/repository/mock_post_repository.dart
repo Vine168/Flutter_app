@@ -1,19 +1,14 @@
 import '../model/post.dart';
-
 import 'post_repository.dart';
 
 class MockPostRepository extends PostRepository {
   @override
-  Future<Post> getPost(int postId) {
+  Future<List<Post>> getPosts() {
     return Future.delayed(Duration(seconds: 5), () {
-      if (postId != 25) {
-        throw Exception("No post found");
-      }
-      return Post(
-        id: 25,
-        title: 'Who is the best',
-        description: 'teacher ronan',
-      );
+      return [
+        Post(id: 1, title: 'who is the best', description: 'teacher ronan'),
+        Post(id: 2, title: 'who is the best', description: 'vine'),
+      ];
     });
   }
 }

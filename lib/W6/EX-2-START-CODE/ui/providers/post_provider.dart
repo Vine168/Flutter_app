@@ -1,30 +1,24 @@
+// ui/providers/post_provider.dart
 import 'package:flutter/material.dart';
-
 import '../../model/post.dart';
 import '../../repository/post_repository.dart';
 import 'async_value.dart';
 
 class PostProvider extends ChangeNotifier {
   final PostRepository _repository;
-
-  AsyncValue<Post>? postValue;
+  AsyncValue<List<Post>>? postsValue;
 
   PostProvider({required PostRepository repository}) : _repository = repository;
 
-  void fetchPost(int postId) async {
-    // 1-  Set loading state
-    postValue = AsyncValue.loading();
+  void fetchPosts() async {
+    postsValue = AsyncValue.loading();
     notifyListeners();
 
     try {
-      // 2   Fetch the data
-      Post post = await _repository.getPost(postId);
-
-      // 3  Set success state
-      postValue = AsyncValue.success(post);
+      List<Post> posts = await _repository.getPosts();
+      postsValue = AsyncValue.success(posts);
     } catch (error) {
-      // 4  Set error state
-      postValue = AsyncValue.error(error);
+      postsValue = AsyncValue.error(error);
     }
 
     notifyListeners();
