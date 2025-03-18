@@ -1,21 +1,20 @@
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../providers/courses_provider.dart';
 
 const Color mainColor = Colors.blue;
 
 class CourseScoreForm extends StatefulWidget {
-  const CourseScoreForm({super.key});
+  const CourseScoreForm({super.key, required this.courseId});
 
+  final String courseId;
   @override
-  State<CourseScoreForm> createState() {
-    return _CourseScoreFormState();
-  }
+  State<CourseScoreForm> createState() => _CourseScoreFormState();
 }
-
 class _CourseScoreFormState extends State<CourseScoreForm> {
   final _formKey = GlobalKey<FormState>();
-
   late String _enteredName;
   late double _enteredScore;
 
@@ -28,12 +27,13 @@ class _CourseScoreFormState extends State<CourseScoreForm> {
 
   void _saveItem() {
     bool isValid = _formKey.currentState!.validate();
-
     if (isValid) {
       _formKey.currentState!.save();
-      Navigator.of(
-        context,
-      ).pop(CourseScore(studentName: _enteredName, studenScore: _enteredScore));
+      Provider.of<CoursesProvider>(context, listen: false).addScore(
+        widget.courseId,
+        CourseScore(studentName: _enteredName, studentScore: _enteredScore),
+      );
+      Navigator.of(context).pop();
     }
   }
 
@@ -53,7 +53,7 @@ class _CourseScoreFormState extends State<CourseScoreForm> {
         double.tryParse(value) == null ||
         double.tryParse(value)! < 0 ||
         double.tryParse(value)! > 100) {
-      return 'Must be a score bteween 0 and 100';
+      return 'Must be a score between 0 and 100';
     }
     return null;
   }

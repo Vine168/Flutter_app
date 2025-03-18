@@ -1,31 +1,19 @@
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../providers/courses_provider.dart';
 import 'course_screen.dart';
 
 const Color mainColor = Colors.blue;
 
-class CourseListScreen extends StatefulWidget {
-  const CourseListScreen({super.key});
-
-  @override
-  State<CourseListScreen> createState() => _CourseListScreenState();
-}
-
-class _CourseListScreenState extends State<CourseListScreen> {
-  final List<Course> _allCourses = [Course(name: 'HTML'), Course(name: 'JAVA')];
-
-  void _editCourse(Course course) async {
-    await Navigator.of(context).push<Course>(
-      MaterialPageRoute(builder: (ctx) => CourseScreen(course: course)),
-    );
-
-    setState(() {
-      // trigger a rebuild
-    });
-  }
+class CoursesListScreen extends StatelessWidget {
+  const CoursesListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CoursesProvider>(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -33,15 +21,20 @@ class _CourseListScreenState extends State<CourseListScreen> {
         title: const Text('SCORE APP', style: TextStyle(color: Colors.white)),
       ),
       body: ListView.builder(
-        itemCount: _allCourses.length,
-        itemBuilder:
-            (ctx, index) => Dismissible(
-              key: Key(_allCourses[index].name),
-              child: CourseTile(
-                course: _allCourses[index],
-                onEdit: _editCourse,
-              ),
-            ),
+        itemCount: provider.courses.length,
+        itemBuilder: (ctx, index) => Dismissible(
+          key: Key(provider.courses[index].id),
+          child: CourseTile(
+            course: provider.courses[index],
+            onEdit: (course) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => CourseScreen(courseId: course.id),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -61,7 +54,7 @@ class CourseTile extends StatelessWidget {
 
   String get averageText {
     String average = course.average.toStringAsFixed(1);
-    return course.hasScore ? "Average : $average" : '';
+    return course.hasScore ? "Average: $average" : '';
   }
 
   @override
