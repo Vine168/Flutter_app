@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../model/post.dart';
 import '../providers/async_value.dart';
 import '../providers/post_provider.dart';
-
 class PostScreen extends StatelessWidget {
   const PostScreen({super.key});
   @override
