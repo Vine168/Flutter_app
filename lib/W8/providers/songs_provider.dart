@@ -41,7 +41,20 @@ class SongsProvider extends ChangeNotifier {
   }
 
   Future<void> deleteSong(String id) async {
-    await _repository.deleteSong(id: id);
-    await fetchSongs();
+    try {
+      // Set loading state before deletion
+      songsState = AsyncValue.loading();
+      notifyListeners();
+      
+      // Perform deletion
+      await _repository.deleteSong(id: id);
+      
+      // Fetch updated list after successful deletion
+      await fetchSongs();
+    } catch (error) {
+      print("DELETE ERROR: $error");
+      songsState = AsyncValue.error(error);
+      notifyListeners();
+    }
   }
 }

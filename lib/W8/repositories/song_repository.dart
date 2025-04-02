@@ -1,6 +1,8 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_app/W8/dto/songs_dto.dart';
 import 'package:flutter_app/W8/models/song.dart';
+import 'package:http/http.dart' as http;
 
 abstract class SongRepository {
   Future<Song> addSong({required String title, required String genre, required String artist});
@@ -10,22 +12,39 @@ abstract class SongRepository {
 }
 
 class FirebaseSongRepository extends SongRepository {
-  final DatabaseReference _databaseRef =
-      FirebaseDatabase.instance.ref().child('Song');
+  static const String baseUrl =
+      'https://songapp-c7e86-default-rtdb.asia-southeast1.firebasedatabase.app';
+  static const String songCollection = "Song";
+  static const String allSongsUrl = '$baseUrl/$songCollection.json';
 
   @override
   Future<Song> addSong({required String title, required String genre, required String artist}) async {
-    final newSongRef = _databaseRef.push();
+    Uri uri = Uri.parse(allSongsUrl);
     final newSongData = {'title': title, 'genre': genre, 'artist': artist};
-    await newSongRef.set(newSongData);
-    return Song(id: newSongRef.key!, title: title, genre: genre, artist: artist);
+    final http.Response response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(newSongData),
+    );
+
+    if (response.statusCode != HttpStatus.ok &&
+        response.statusCode != HttpStatus.created) {
+      throw Exception('Failed to add song');
+    }
+    final newId = json.decode(response.body)['name'];
+    return Song(id: newId, title: title, genre: genre, artist: artist);
   }
 
   @override
   Future<List<Song>> getSongs() async {
-    final snapshot = await _databaseRef.get();
-    if (!snapshot.exists) return [];
-    final data = snapshot.value as Map<dynamic, dynamic>;
+    Uri uri = Uri.parse(allSongsUrl);
+    final http.Response response = await http.get(uri);
+    if (response.statusCode != HttpStatus.ok &&
+        response.statusCode != HttpStatus.created) {
+      throw Exception('Failed to load songs');
+    }
+    final data = json.decode(response.body) as Map<String, dynamic>?;
+    if (data == null) return [];
     return data.entries
         .map((entry) => SongsDto.fromJson(entry.key, entry.value))
         .toList();
@@ -33,14 +52,27 @@ class FirebaseSongRepository extends SongRepository {
 
   @override
   Future<Song> updateSong({required Song song}) async {
-    final songRef = _databaseRef.child(song.id);
-    await songRef.update(SongsDto.toJson(song));
+    final updateUrl = '$baseUrl/$songCollection/${song.id}.json';
+    final uri = Uri.parse(updateUrl);
+    final http.Response response = await http.patch(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(SongsDto.toJson(song)),
+    );
+
+    if (response.statusCode != HttpStatus.ok) {
+      throw Exception('Failed to update song');
+    }
     return song;
   }
 
   @override
   Future<void> deleteSong({required String id}) async {
-    final songRef = _databaseRef.child(id);
-    await songRef.remove();
+    final deleteUrl = '$baseUrl/$songCollection/$id.json';
+    final uri = Uri.parse(deleteUrl);
+    final http.Response response = await http.delete(uri);
+    if (response.statusCode != HttpStatus.ok) {
+      throw Exception('Failed to delete song');
+    }
   }
 }

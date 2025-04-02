@@ -50,69 +50,95 @@ class _SongFormScreenState extends State<SongFormScreen> {
     final isEditing = widget.song != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? "Edit Song" : "Add Song"),
+        title: Text(
+          isEditing ? "Edit Song" : "Add New Song",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.blue[700],
+        elevation: 4,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                initialValue: _title,
-                decoration: const InputDecoration(labelText: "Title"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter a title";
-                  }
-                  return null;
-                },
-                onSaved: (value) => _title = value!,
-              ),
-              TextFormField(
-                initialValue: _artist,
-                decoration: const InputDecoration(labelText: "Artist"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter an artist";
-                  }
-                  return null;
-                },
-                onSaved: (value) => _artist = value!,
-              ),
-              TextFormField(
-                initialValue: _genre,
-                decoration: const InputDecoration(labelText: "Genre"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter a genre";
-                  }
-                  return null;
-                },
-                onSaved: (value) => _genre = value!,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isEditing ? Colors.orange : Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 5,
-                  shadowColor: Colors.black45,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      initialValue: _title,
+                      decoration: InputDecoration(
+                        labelText: "Song Title",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.music_note),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Please enter a title" : null,
+                      onSaved: (value) => _title = value!,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      initialValue: _artist,
+                      decoration: InputDecoration(
+                        labelText: "Artist",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.person),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Please enter an artist" : null,
+                      onSaved: (value) => _artist = value!,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      initialValue: _genre,
+                      decoration: InputDecoration(
+                        labelText: "Genre",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.category),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Please enter a genre" : null,
+                      onSaved: (value) => _genre = value!,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isEditing ? Colors.orange[600] : Colors.green[600],
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 6,
+                      ),
+                      child: Text(
+                        isEditing ? "Update Song" : "Add Song",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  isEditing ? "Update" : "Add",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal,
-                    color: Colors.white,
-                  ),
-                ),
-              )
-            ],
+              ),
+            ),
           ),
         ),
       ),
